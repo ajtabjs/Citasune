@@ -25,6 +25,9 @@
   // servers to fall through when the configured one can't reach a site, ordered
   // most-reliable first so a dead primary lands on a working one quickly.
   var WISP_FALLBACKS = [
+    // the obfuscated private endpoints first (main.js decodes and publishes
+    // them as CSEndpoints), then the public pool.
+    ...(globalThis.CSEndpoints || []),
     "wss://wisp.rhw.one/wisp/",
     "wss://fern.best/wisp/",
     "wss://glseries.net/wisp/",

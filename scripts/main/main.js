@@ -423,8 +423,29 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// the private wisp endpoints are kept obfuscated (base64 + rolling xor) so the
+// raw hosts never sit as plain text in the source. decoded once at load and
+// published as globals so the proxy scripts can pick them up.
+(() => {
+  const decode = value => Array.from(atob(value), (byte, index) =>
+    String.fromCharCode(byte.charCodeAt(0) ^ ((73 + index * 17) & 255))).join('');
+  const endpoints = Object.freeze([
+    "PikYRqKxzu6ijJRgYAhUJzRFFqM=",
+    "PikYRqKxzu64mp8qdklbJDwNHqPwgQ==",
+    "PikYRqKxy/Gpjot8LFIFJTEQELWzzdO/lJZlZkpYM3YHH/+z2damjpYt"
+  ].map(decode));
+  globalThis.CSEndpoints = endpoints;
+  globalThis.CSEndpoint = endpoints[0];
+})();
+
+// the obfuscated endpoints lead the list (and the first one becomes the
+// default); everything after is the public fallback pool.
 const wispServers = [
-  { name: "ajswags (default)", url: "wss://gay.ajswags.xyz/" },
+  ...(globalThis.CSEndpoints || []).map((url) => ({
+    name: url.replace(/^wss?:\/\//, "").replace(/\/$/, ""),
+    url,
+  })),
+  { name: "ajswags", url: "wss://gay.ajswags.xyz/" },
   { name: "us-east", url: "wss://us-east.wisp.q13x.com" },
   { name: "nebulaproxy.io — 472ms", url: "wss://nebulaproxy.io" },
   { name: "invisiproxy.com — 497ms", url: "wss://invisiproxy.com" },
